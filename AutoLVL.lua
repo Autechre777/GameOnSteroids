@@ -1,4 +1,4 @@
-local ver = "0.04"
+local ver = "0.05"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/AutoLVL.lua", SCRIPT_PATH .. "AutoLVL.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -34,6 +34,7 @@ local gsal_SkillOrder = {}
 local gsal_Timer = GetTickCount()
 local gsal_ErrorTimer = 0
 local gsal_IDNames = {}
+local gsal_DelayedActions = {}
 
 function gsal_GetIDName(file)
         for i = 1, #file do
@@ -126,15 +127,42 @@ function gsal_AnalyseText()
         end
 end
 
+function ExecuteDelayedActions()
+        if gsal_DelayedActions == nil then
+                return
+        end
+        for i = 1, #gsal_DelayedActions do
+                if GetTickCount() - gsal_DelayedActions[i].time >= gsal_DelayedActions[i].delay then
+                        gsal_DelayedActions[i].execute()
+                        table.remove(gsal_DelayedActions, i)
+                        break
+                end
+        end
+end
+
+function DelayedAction(func, sec)
+        if #gsal_DelayedActions == 0 then -- -> stop holding more than 1 action
+                table.insert(gsal_DelayedActions, {execute = func, time = GetTickCount(), delay = sec*1000})
+        end
+end
+
+function GenerateRandomFloat(lower, greater)
+        return lower + math.random()  * (greater - lower)
+end
+
 gsal_AnalyseText()
 
 gsal_MainMenu = MenuConfig("gsoalu", "GamSterOn Auto LVL UP")
 gsal_MainMenu:Boolean("HUMANIZER", "Humanizer", false)
+gsal_MainMenu:Boolean("SETVALUE", "Block LvlUP on Load", true)
 gsal_MainMenu:Menu(GetObjectName(myHero), GetObjectName(myHero))
 gsal_MainMenu[gsal_ChampionName]:DropDown("SWITCH", "Skill Order -> ", 0, gsal_ConnectTableString())
-gsal_MainMenu[gsal_ChampionName].SWITCH:Value(0)
+if gsal_MainMenu.SETVALUE:Value() then
+        gsal_MainMenu[gsal_ChampionName].SWITCH:Value(0)
+end
 
 OnTick(function (myHero)
+        ExecuteDelayedActions()
         if GetTickCount() > gsal_Timer + 1000 then
                 local CASE = gsal_MainMenu[gsal_ChampionName].SWITCH:Value()
                 if gsal_IDNames[CASE] == nil then
@@ -150,7 +178,7 @@ OnTick(function (myHero)
                         if gsal_SkillOrder[gsal_IDNames[CASE]] then
                                 if LEVEL > PLUS then
                                         if HUMANIZER then
-                                                DelayAction(function() LevelSpell(gsal_SkillOrder[gsal_IDNames[CASE]][LEVEL]) end,RANDOM)
+                                                DelayedAction(function() LevelSpell(gsal_SkillOrder[gsal_IDNames[CASE]][LEVEL]) end, RANDOM)
                                         else
                                                 LevelSpell(gsal_SkillOrder[gsal_IDNames[CASE]][LEVEL])
                                         end
@@ -160,7 +188,3 @@ OnTick(function (myHero)
               end
       end
 end)
-
-function GenerateRandomFloat(lower, greater)
-        return lower + math.random()  * (greater - lower)
-end
