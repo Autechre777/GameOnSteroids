@@ -170,10 +170,12 @@ function WP_MCollision(source, castpos, range, speed, width, delay)
         return col
 end
 
-function WP_HCollision(source, castpos, range, speed, width, delay)
+function WP_HCollision(source, unit, castpos, range, speed, width, delay)
         local col = {}
+        local uid = GetNetworkID(unit)
         for t, target in pairs(GetEnemyHeroes()) do
-                if ValidTarget(target, range + 500) then
+                local tid = GetNetworkID(target)
+                if ValidTarget(target, range + 500) and tid ~= uid then
                         local targetpos = WP_GetPredPointOnPath(source, target, speed, width, delay)
                         if targetpos and targetpos.x then
                                 local dist = WP_DistPointLineSegment(GetOrigin(source), castpos, targetpos)
