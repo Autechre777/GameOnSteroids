@@ -36,13 +36,13 @@ function WP_TravelDist(unit)
         if WP[GetNetworkID(unit)] then return WP[GetNetworkID(unit)].lenght end
 end
 
-local function NormalizeVector(vec)
+function WP_NormalizeVector(vec)
         local num = 1 / math.sqrt(vec.x^2 + vec.z^2)
         return { x = vec.x * num, z = vec.z * num }
 end
 
-local function ExtendedPosition(vec1, vec2, s)
-        local normalized = NormalizeVector({ x = vec1.x - vec2.x, z = vec1.z - vec2.z})
+function WP_ExtendedPosition(vec1, vec2, s)
+        local normalized = WP_NormalizeVector({ x = vec1.x - vec2.x, z = vec1.z - vec2.z})
         if normalized and normalized.x then
                 local px = vec2.x + (normalized.x * s)
                 local pz = vec2.z + (normalized.z * s)
@@ -50,7 +50,7 @@ local function ExtendedPosition(vec1, vec2, s)
         end
 end
 
-function QuadraticEquation(source, startP, endP, unitspeed, spellspeed)
+function WP_InterceptionTime(source, startP, endP, unitspeed, spellspeed)
         local sx = source.x
         local sy = source.z
         local ux = startP.x
@@ -116,16 +116,16 @@ function WP_GetPredPointOnPath(source, unit, speed, width, delay)
                         local dop = WP_DistOnPath(unit)
                         if d > dop then
                                 local dd = math.sqrt( (pos.x-pi1.x)^2 + (pos.z-pi1.z)^2 )
-                                local t = QuadraticEquation(spos, pos, pi1, ms, speed) + delay
+                                local t = WP_InterceptionTime(spos, pos, pi1, ms, speed) + delay
                                 local s = (ms * t) - (width/2)
                                 if dd >= s then
-                                        local pos = ExtendedPosition(pi1, pos, s)
+                                        local pos = WP_ExtendedPosition(pi1, pos, s)
                                         if pos and pos.x then
                                                 return pos
                                         end
                                 end
                                 if i + 1 == #path then
-                                        local pos = ExtendedPosition(pi1, pos, dd)
+                                        local pos = WP_ExtendedPosition(pi1, pos, dd)
                                         if pos and pos.x then
                                                 return pos
                                         end
@@ -133,17 +133,17 @@ function WP_GetPredPointOnPath(source, unit, speed, width, delay)
                                 for j = i + 1, #path - 1, 1 do
                                         local pj = path[j]
                                         local pj1 = path[j + 1]
-                                        t = QuadraticEquation(spos, pj, pj1, ms, speed) - (dd / ms) + delay
+                                        t = WP_InterceptionTime(spos, pj, pj1, ms, speed) - (dd / ms) + delay
                                         s = (ms * t) - (width/2)
                                         dd = math.sqrt( (pj.x-pj1.x)^2 + (pj.z-pj1.z)^2 )
                                         if dd >= s then
-                                                local pos = ExtendedPosition(pj1, pj, s)
+                                                local pos = WP_ExtendedPosition(pj1, pj, s)
                                                 if pos and pos.x then
                                                         return pos
                                                 end
                                         end
                                         if j + 1 == #path then
-                                                local pos = ExtendedPosition(pj1, pj, dd)
+                                                local pos = WP_ExtendedPosition(pj1, pj, dd)
                                                 if pos and pos.x then
                                                         return pos
                                                 end
@@ -203,13 +203,13 @@ function WP_GetExtendedPointOnPath(unit, s)
                         if d > dop then
                                 local dd = math.sqrt( (pos.x-pi1.x)^2 + (pos.z-pi1.z)^2 )
                                 if dd >= s then
-                                        local pos = ExtendedPosition(pi1, pos, s)
+                                        local pos = WP_ExtendedPosition(pi1, pos, s)
                                         if pos and pos.x then
                                                 return pos
                                         end
                                 end
                                 if i + 1 == #path then
-                                        local pos = ExtendedPosition(pi1, pos, dd)
+                                        local pos = WP_ExtendedPosition(pi1, pos, dd)
                                         if pos and pos.x then
                                                 return pos
                                         end
@@ -221,13 +221,13 @@ function WP_GetExtendedPointOnPath(unit, s)
                                         ss = ss - dd
                                         dd = math.sqrt( (pj.x-pj1.x)^2 + (pj.z-pj1.z)^2 )
                                         if dd >= ss then
-                                                local pos = ExtendedPosition(pj1, pj, ss)
+                                                local pos = WP_ExtendedPosition(pj1, pj, ss)
                                                 if pos and pos.x then
                                                         return pos
                                                 end
                                         end
                                         if j + 1 == #path then
-                                                local pos = ExtendedPosition(pj1, pj, dd)
+                                                local pos = WP_ExtendedPosition(pj1, pj, dd)
                                                 if pos and pos.x then
                                                         return pos
                                                 end
