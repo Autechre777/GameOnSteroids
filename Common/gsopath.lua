@@ -75,6 +75,29 @@ function QuadraticEquation(source, startP, endP, unitspeed, spellspeed)
         return 0.0001
 end
 
+function WP_DistPointLineSegment(a, b, c)
+        local ax = a.x
+        local ay = a.z
+        local bx = b.x
+        local by = b.z
+        local cx = c.x
+        local cy = c.z
+        local dx = bx - ax
+        local dy = by - ay
+        local t = ((cx - ax) * dx + (cy - ay) * dy) / (dx * dx + dy * dy)
+        if t < 0 then
+                dx = cx - ax
+                dy = cy - ay
+        elseif t > 1 then
+                dx = cx - bx
+                dy = cy - by
+        else
+                dx = cx - (ax + (t * dx))
+                dy = cy - (ay + (t * dy))
+        end
+        return math.sqrt( dx^2 + dy^2 )
+end
+
 function WP_GetPredPointOnPath(source, unit, speed, width, delay)
         local id = GetNetworkID(unit)
         if WP[id] then
@@ -131,27 +154,36 @@ function WP_GetPredPointOnPath(source, unit, speed, width, delay)
         end
 end
 
-function Dist_Point_Line_Segment(a, b, c)
-        local ax = a.X
-        local ay = a.Y
-        local bx = b.X
-        local by = b.Y
-        local cx = c.X
-        local cy = c.Y
-        local dx = bx - ax
-        local dy = by - ay
-        local t = ((cx - ax) * dx + (cy - ay) * dy) / (dx * dx + dy * dy)
-        if t < 0 then
-                dx = cx - ax
-                dy = cy - ay
-        elseif t > 1 then
-                dx = cx - bx
-                dy = cy - by
-        else
-                dx = cx - (ax + (t * dx))
-                dy = cy - (ay + (t * dy))
+function WP_MCollision(source, castpos, range, speed, width, delay)
+        local col = {}
+        for m, minion in pairs(minionManager.objects) do
+                if ValidTarget(minion, range + 500) then
+                        local minionpos = WP_GetPredPointOnPath(source, minion, speed, width, delay)
+                        if minionpos and minionpos.x then
+                                local dist = WP_DistPointLineSegment(GetOrigin(source), castpos, minionpos)
+                                if dist < width + GetHitBox(minion) + ((GetLatency() / 1000) * GetMoveSpeed(minion)) + 25 then
+                                        table.insert(col, minion)
+                                end
+                        end
+                end
         end
-        return math.sqrt( dx^2 + dy^2 )
+        return col
+end
+
+function WP_HCollision(source, castpos, range, speed, width, delay)
+        local col = {}
+        for t, target in pairs(GetEnemyHeroes()) do
+                if ValidTarget(target, range + 500) then
+                        local targetpos = WP_GetPredPointOnPath(source, target, speed, width, delay)
+                        if targetpos and targetpos.x then
+                                local dist = WP_DistPointLineSegment(GetOrigin(source), castpos, targetpos)
+                                if dist < width + GetHitBox(target) + ((GetLatency() / 1000) * GetMoveSpeed(target)) + 25 then
+                                        table.insert(col, target)
+                                end
+                        end
+                end
+        end
+        return col
 end
 
 function WP_GetExtendedPointOnPath(unit, s)
