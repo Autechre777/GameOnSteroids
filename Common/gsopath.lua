@@ -79,12 +79,12 @@ function WP_GetPredPointOnPath(source, unit, speed, width, delay)
         local id = GetNetworkID(unit)
         if WP[id] then
                 local path = WP[id].path
+                local pos = GetOrigin(unit)
                 if not WP[id].ismoving then
-                        return nil
+                        return pos
                 end
                 local ms = GetMoveSpeed(unit)
                 local spos = GetOrigin(source)
-                local pos = GetOrigin(unit)
                 local d = 0
                 for i = 1, #path - 1, 1 do
                         local pi = path[i]
@@ -158,10 +158,10 @@ function WP_GetExtendedPointOnPath(unit, s)
         local id = GetNetworkID(unit)
         if WP[id] then
                 local path = WP[id].path
-                if not WP[id].ismoving then
-                        return nil
-                end
                 local pos = GetOrigin(unit)
+                if not WP[id].ismoving then
+                        return pos
+                end
                 local d = 0
                 for i = 1, #path - 1, 1 do
                         local pi = path[i]
