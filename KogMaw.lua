@@ -40,6 +40,10 @@ OnSpellCast(function(spell)
         local s = spell.spellID
         if GetTickCount() < lastaa + aawind and (s == 0 or s == 1 or s == 2 or s == 3) then
                 BlockCast()
+                if s == 0 then lastq = 0
+                elseif s == 1 then lastw = 0
+                elseif s == 2 then laste = 0
+                else lastr = 0 end
         end
 end)
 
@@ -47,7 +51,7 @@ function Orb_GetTarget(range)
         local t = nil
         num = 10000
         for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, range + 100) then
+                if ValidTarget(enemy, range) then
                         local mr = GetMagicResist(enemy)
                         local hp = enemy.health * (mr/(mr+100))
                         if hp - ((GetBonusDmg(enemy)+GetBonusAP(enemy))*2) < num then
@@ -60,13 +64,14 @@ function Orb_GetTarget(range)
 end
 
 function WP_CastSpell(spell, spellT, col)
-        if not IsReady(spell) or GetTickCount() < lastq + 250 or GetTickCount() < lastw + 250 or GetTickCount() < laste + 250 or GetTickCount() < lastr + 250 then return false end
+        if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 or GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500 then return false end
         if spell == _R then
                 if GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40 and GotBuff(myHero, "kogmawlivingartillerycost") > 1 then return false end
                 spellT.range = 900 + ( 300 * GetCastLevel(myHero, spell) )
         end
         local t = Orb_GetTarget(spellT.range)
         if t == nil then return false end
+        if math.sqrt( (t.x-myHero.x)^2 + (t.z-myHero.z)^2) < myHero.range + myHero.boundingRadius + t.boundingRadius and GetTickCount() > lastaa + ( 0.75 * aaanim ) then return false end
         local pI = GetPrediction(t, spellT)
         if pI and pI.hitChance >= 0.25 and math.sqrt( (pI.castPos.x-myHero.x)^2 + (pI.castPos.z-myHero.z)^2) < spellT.range and (col == false or not pI:mCollision(1)) then
                 CastSkillShot(spell, pI.castPos)
@@ -82,7 +87,7 @@ OnTick(function(myHero)
                 local aarange = myHero.range
                 if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 250 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
                 local t = Orb_GetTarget(aarange + myHero.boundingRadius)
-                if t ~= nil and IsReady(_W) and GetTickCount() > lastq + 250 and GetTickCount() > lastw + 250 and GetTickCount() > laste + 250 and GetTickCount() > lastr + 250 then
+                if t ~= nil and IsReady(_W) and GetTickCount() > lastw + 500 then
                         CastSpell(_W)
                         lastw = GetTickCount()
                 end
