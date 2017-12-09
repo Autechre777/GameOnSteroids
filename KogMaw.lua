@@ -5,7 +5,6 @@ require "OpenPredict"
 local spelltime = 0
 local aawind = 250
 local lastq = 0
-local lastw = 0
 local laste = 0
 local lastr = 0
 local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
@@ -20,6 +19,10 @@ OnProcessSpellAttack(function(unit,aa)
                 aawind = aa.windUpTime * 1000
                 spelltime = GetTickCount() + aawind + 60
         end
+end)
+
+OnProcessSpellComplete(function(unit, spell)
+        if unit == myHero and spell.name:find("Attack") and IsReady(_W) and spell.target.type == "AIHeroClient" then CastSpell(_W) end
 end)
 
 OnIssueOrder(function(Order)
@@ -43,7 +46,7 @@ function WP_GetTarget(range)
 end
 
 function WP_CastSpell(spell, spellT, col)
-        if not IsReady(spell) or GetTickCount() < spelltime or (spell == _R and GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40) or GetTickCount() < lastq + 250 or GetTickCount() < lastw + 250 or GetTickCount() < laste + 250 or GetTickCount() < lastr + 250 then return false end
+        if not IsReady(spell) or GetTickCount() < spelltime or (spell == _R and GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40) or GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500 then return false end
         if spell == _R then R.range = 900 + ( 300 * GetCastLevel(myHero, _R) ) end
         local t = WP_GetTarget(spellT.range)
         if t == nil then return false end
@@ -60,14 +63,5 @@ OnTick(function(myHero)
                 if WP_CastSpell(_E, E, false) == true then laste = GetTickCount() end
                 if WP_CastSpell(_Q, Q, true) == true then lastq = GetTickCount() end
                 if WP_CastSpell(_R, R, false) == true then lastr = GetTickCount() end
-                if IsReady(_W) and GetTickCount() > spelltime and GetTickCount() > lastw + 500 then
-                        for i, enemy in pairs(GetEnemyHeroes()) do
-                                if ValidTarget(enemy, 610 + (20 * GetCastLevel(myHero, _W)) + myHero.boundingRadius + enemy.boundingRadius - 30) then
-                                        CastSpell(_W)
-                                        lastw = GetTickCount()
-                                        break
-                                end
-                        end
-                end
         end
 end)
