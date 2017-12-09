@@ -1,5 +1,15 @@
 if myHero.charName ~= "KogMaw" then return end
 
+local ver = "0.01"
+function AutoUpdate(data)
+    if tonumber(data) > tonumber(ver) then
+        DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/KogMaw.lua", SCRIPT_PATH .. "KogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
+    else
+        PrintChat(string.format("<font color='#b756c5'>GamSterOn KogMaw </font>").."updated ! Version: "..ver)
+    end
+end
+GetWebResultAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/KogMaw.version", AutoUpdate)
+
 require "OpenPredict"
 
 local spelltime = 0
