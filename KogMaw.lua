@@ -46,8 +46,11 @@ function WP_GetTarget(range)
 end
 
 function WP_CastSpell(spell, spellT, col)
-        if not IsReady(spell) or GetTickCount() < spelltime or (spell == _R and GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40) or GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500 then return false end
-        if spell == _R then R.range = 900 + ( 300 * GetCastLevel(myHero, _R) ) end
+        if not IsReady(spell) or GetTickCount() < spelltime or GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500 then return false end
+        if spell == _R then
+                if GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40 and GotBuff(myHero, "kogmawlivingartillerycost") > 1 then return false end
+                R.range = 900 + ( 300 * GetCastLevel(myHero, spell) )
+        end
         local t = WP_GetTarget(spellT.range)
         if t == nil then return false end
         local pI = GetPrediction(t, spellT)
