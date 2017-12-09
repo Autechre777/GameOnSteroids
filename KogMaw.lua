@@ -38,13 +38,7 @@ end)
 
 OnSpellCast(function(spell)
         local s = spell.spellID
-        if GetTickCount() < lastaa + aawind and (s == 0 or s == 1 or s == 2 or s == 3) then
-                BlockCast()
-                if s == 0 then lastq = 0
-                elseif s == 1 then lastw = 0
-                elseif s == 2 then laste = 0
-                else lastr = 0 end
-        end
+        if GetTickCount() < lastaa + aawind and (s == 0 or s == 1 or s == 2 or s == 3) then BlockCast() end
 end)
 
 function Orb_GetTarget(range)
