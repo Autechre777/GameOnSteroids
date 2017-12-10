@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.03"
+local ver = "0.04"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/KogMaw.lua", SCRIPT_PATH .. "KogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -24,10 +24,13 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.03")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.04")
     menu:KeyBinding("combo", "Combo", 32)
     menu:Slider("win", "Extra Wind Up Time",50,0,100,10)
     menu:Slider("manaR", "Max R Mana Cost",160,40,400,40)
+    menu:Slider("predQ", "Q Hitchance",25,0,100,1)
+    menu:Slider("predE", "E Hitchance",25,0,100,1)
+    menu:Slider("predR", "R Hitchance",25,0,100,1)
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
@@ -77,7 +80,10 @@ function WP_CastSpell(spell, spellT)
         if dist < herorange and GetTickCount() > lastaa + ( 0.7 * aaanim ) then return false end
         if dist < herorange and (GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500) then return false end
         local pI = GetPrediction(t, spellT)
-        if pI and pI.hitChance >= 0.25 and math.sqrt( (pI.castPos.x-myHero.x)^2 + (pI.castPos.z-myHero.z)^2) < spellT.range then
+        if pI and math.sqrt( (pI.castPos.x-myHero.x)^2 + (pI.castPos.z-myHero.z)^2) < spellT.range then
+                if spell == _Q and pI.hitChance < menu.predQ:Value() / 100 then return false end
+                if spell == _E and pI.hitChance < menu.predE:Value() / 100 then return false end
+                if spell == _R and pI.hitChance < menu.predR:Value() / 100 then return false end
                 if spell == _Q and pI:mCollision(1) then return false end
                 CastSkillShot(spell, pI.castPos)
                 return true
