@@ -61,7 +61,7 @@ function Orb_GetTarget(range)
         return t
 end
 
-function WP_CastSpell(spell, spellT)
+function Kog_CastSpell(spell, spellT)
 
         if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 or GetTickCount() < lastq + 100 or GetTickCount() < laste + 100 or GetTickCount() < lastr + 100 then return false end
         
@@ -117,9 +117,9 @@ OnTick(function(myHero)
                         MoveToXYZ(GetMousePos())
                 end
                 
-                if WP_CastSpell(_E, E) == true then laste = GetTickCount() end
-                if WP_CastSpell(_Q, Q) == true then lastq = GetTickCount() end
-                if WP_CastSpell(_R, R) == true then lastr = GetTickCount() end
+                if Kog_CastSpell(_E, E) == true then laste = GetTickCount() end
+                if Kog_CastSpell(_Q, Q) == true then lastq = GetTickCount() end
+                if Kog_CastSpell(_R, R) == true then lastr = GetTickCount() end
                 
         end
         
