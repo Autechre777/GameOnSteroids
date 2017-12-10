@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.02"
+local ver = "0.03"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/KogMaw.lua", SCRIPT_PATH .. "KogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -24,9 +24,10 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.03")
     menu:KeyBinding("combo", "Combo", 32)
-    menu:Slider("win", "ExtraWindUp",50,0,100,10)
+    menu:Slider("win", "Extra Wind Up Time",50,0,100,10)
+    menu:Slider("manaR", "Max R Mana Cost",160,40,400,40)
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
@@ -38,7 +39,7 @@ end)
 
 OnSpellCast(function(spell)
         local s = spell.spellID
-        if GetTickCount() < lastaa + aawind and (s == 0 or s == 1 or s == 2 or s == 3) then BlockCast() end
+        if GetTickCount() < lastaa + aawind + 50 and (s == 0 or s == 1 or s == 2 or s == 3) then BlockCast() end
 end)
 
 function Orb_GetTarget(range)
@@ -57,20 +58,31 @@ function Orb_GetTarget(range)
         return t
 end
 
-function WP_CastSpell(spell, spellT, col)
-        if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 or GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500 then return false end
+function WP_CastSpell(spell, spellT)
+
+        if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 or GetTickCount() < lastq + 100 or GetTickCount() < laste + 100 or GetTickCount() < lastr + 100 then return false end
+        
         if spell == _R then
-                if GetCurrentMana(myHero) - 200 < GotBuff(myHero, "kogmawlivingartillerycost") * 40 and GotBuff(myHero, "kogmawlivingartillerycost") > 1 then return false end
+                local mana = GetCurrentMana(myHero)
+                local kogartillery = 40 + ( 40 * GotBuff(myHero, "kogmawlivingartillerycost") )
+                if kogartillery > mana - 80 or kogartillery > menu.manaR:Value() then return false end
                 spellT.range = 900 + ( 300 * GetCastLevel(myHero, spell) )
         end
+        
         local t = Orb_GetTarget(spellT.range)
         if t == nil then return false end
-        if math.sqrt( (t.x-myHero.x)^2 + (t.z-myHero.z)^2) < myHero.range + myHero.boundingRadius + t.boundingRadius and GetTickCount() > lastaa + ( 0.75 * aaanim ) then return false end
+        
+        local dist = math.sqrt( (t.x-myHero.x)^2 + (t.z-myHero.z)^2)
+        local herorange = myHero.range + myHero.boundingRadius + t.boundingRadius
+        if dist < herorange and GetTickCount() > lastaa + ( 0.7 * aaanim ) then return false end
+        if dist < herorange and (GetTickCount() < lastq + 500 or GetTickCount() < laste + 500 or GetTickCount() < lastr + 500) then return false end
         local pI = GetPrediction(t, spellT)
-        if pI and pI.hitChance >= 0.25 and math.sqrt( (pI.castPos.x-myHero.x)^2 + (pI.castPos.z-myHero.z)^2) < spellT.range and (col == false or not pI:mCollision(1)) then
+        if pI and pI.hitChance >= 0.25 and math.sqrt( (pI.castPos.x-myHero.x)^2 + (pI.castPos.z-myHero.z)^2) < spellT.range then
+                if spell == _Q and pI:mCollision(1) then return false end
                 CastSkillShot(spell, pI.castPos)
                 return true
         end
+        
         return false
 end
 
@@ -79,7 +91,8 @@ OnTick(function(myHero)
         if menu.combo:Value() then
         
                 local aarange = myHero.range
-                if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 250 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
+                local kogbio = GotBuff(myHero, "KogMawBioArcaneBarrage")
+                if kogbio == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
                 local t = Orb_GetTarget(aarange + myHero.boundingRadius)
                 if t ~= nil and IsReady(_W) and GetTickCount() > lastw + 500 then
                         CastSpell(_W)
@@ -98,9 +111,9 @@ OnTick(function(myHero)
                         MoveToXYZ(GetMousePos())
                 end
                 
-                if WP_CastSpell(_E, E, false) == true then laste = GetTickCount() end
-                if WP_CastSpell(_Q, Q, true) == true then lastq = GetTickCount() end
-                if WP_CastSpell(_R, R, false) == true then lastr = GetTickCount() end
+                if WP_CastSpell(_E, E) == true then laste = GetTickCount() end
+                if WP_CastSpell(_Q, Q) == true then lastq = GetTickCount() end
+                if WP_CastSpell(_R, R) == true then lastr = GetTickCount() end
                 
         end
         
