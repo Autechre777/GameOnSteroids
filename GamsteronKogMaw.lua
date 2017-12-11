@@ -27,7 +27,7 @@ local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
 menu = MenuConfig("GSO", "GamSterOn KogMaw 0.08")
-        menu:Key("reset", "Reset Settings", string.byte("T"))
+        menu:Key("reset", "Reset Menu Settings", string.byte("T"))
         menu:SubMenu("combo", "Combo")
                 menu.combo:Key("ckey", "Combo Key", 32)
                 menu.combo:Slider("ewin", "Higher Value = faster kite",60,-15,100,10)
