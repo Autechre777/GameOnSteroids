@@ -124,11 +124,11 @@ OnTick(function(myHero)
                 BlockF7OrbWalk(true)
                 
                 aarange = myHero.range
-                if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
-                local t = Orb_GetTarget(aarange + myHero.boundingRadius)
-                
                 local moveT = lastaa + aawind
                 local attackT = lastaa + aaanim
+                if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
+
+                local t = Orb_GetTarget(aarange + myHero.boundingRadius)
                 if t == nil and GetTickCount() > moveT and GetTickCount() > lastmove + 175 then
                         lastmove = GetTickCount()
                         MoveToXYZ(GetMousePos())
