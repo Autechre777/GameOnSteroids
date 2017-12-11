@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.06"
+local ver = "0.07"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronKogMaw.lua", SCRIPT_PATH .. "GamsteronKogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -26,13 +26,12 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.06")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.07")
         menu:Key("reset", "Reset Settings", string.byte("T"))
         menu:SubMenu("combo", "Combo")
                 menu.combo:Key("ckey", "Combo Key", 32)
                 menu.combo:Slider("manaR", "Max R Mana Cost - combo",80,40,400,40)
                 menu.combo:Slider("manaRk", "Max R Mana Cost - killsteal",200,40,400,40)
-                menu.combo:Slider("ewin", "Orbwalker Extra Wind Up Time",30,0,60,10)
         menu:SubMenu("pred", "Prediction")
                 menu.pred:Slider("predQ", "Q Hitchance",65,0,100,1)
                 menu.pred:Slider("predE", "E Hitchance",65,0,100,1)
@@ -41,7 +40,7 @@ menu = MenuConfig("GSO", "GamSterOn KogMaw 0.06")
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
                 lastaa = GetTickCount()
-                aawind = aa.windUpTime * 1000 - menu.combo.ewin:Value()
+                aawind = aa.windUpTime * 1000 + 10
                 aaanim = aa.animationTime * 1000 - 125
         end
 end)
@@ -80,7 +79,7 @@ end
 
 function Kog_CastSpell(spell, spellT, kill)
 
-        if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 then return false end
+        if not IsReady(spell) or GetTickCount() < lastaa + aawind then return false end
         if kill == true and GetTickCount() < lastkillsteal + 1500 then return false end
         
         local spelldmg = 0
@@ -152,7 +151,6 @@ OnTick(function(myHero)
         if menu.reset:Value() then
                 menu.combo.manaR:Value(80)
                 menu.combo.manaRk:Value(200)
-                menu.combo.ewin:Value(30)
                 menu.pred.predQ:Value(65)
                 menu.pred.predE:Value(65)
                 menu.pred.predR:Value(65)
