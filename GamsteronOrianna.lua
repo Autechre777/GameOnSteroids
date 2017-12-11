@@ -1,6 +1,6 @@
 if myHero.charName ~= "Orianna" then return end
 
-local ver = "0.01"
+local ver = "0.02"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronOrianna.lua", SCRIPT_PATH .. "GamsteronOrianna.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -30,7 +30,7 @@ local R = { width = 325, delay = 0.75 }
 
 menu = MenuConfig("GSO", "GamSterOn Orianna 0.01")
     menu:KeyBinding("combo", "Combo", 32)
-    menu:Slider("win", "Extra Wind Up Time",50,0,100,10)
+    menu:Slider("win", "Extra Wind Up Time",20,0,50,10)
     menu:Slider("predQ", "Q Hitchance",50,0,100,5)
 
 OnProcessSpell(function(unit, spell)
@@ -94,7 +94,7 @@ end
 
 function Ori_CastQ()
 
-        if not IsReady(_Q) or qball == nil or GetTickCount() < lastq + 200 or GetTickCount() < lastw + 200 or GetTickCount() < laste + 200 or GetTickCount() < lastr + 200 then return false end
+        if not IsReady(_Q) or qball == nil then return false end
         
         if Ori_CastQFunc(300) == true then return true
         elseif Ori_CastQFunc(200) == true then return true
@@ -122,7 +122,7 @@ end
 
 function Ori_CastE()
 
-        if not IsReady(_E) or qball == nil or GetTickCount() < lastq + 200 or GetTickCount() < lastw + 200 or GetTickCount() < laste + 200 or GetTickCount() < lastr + 200 then return false end
+        if not IsReady(_E) or qball == nil then return false end
         
         if math.sqrt( (qball.x-myHero.x)^2 + (qball.z-myHero.z)^2 ) > 825 or GetCurrentHP(myHero)/GetMaxHP(myHero)*100 < 75 then
                 CastTargetSpell(myHero, _E)
@@ -139,7 +139,7 @@ function Ori_CastSpell(spell, spellT)
         
         --local count = 0
         for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, 1200) and math.sqrt( (qball.x-enemy.x)^2 + (qball.z-enemy.z)^2 ) < spellT.width / 2 then
+                if ValidTarget(enemy, 1200) and math.sqrt( (qball.x-enemy.x)^2 + (qball.z-enemy.z)^2 ) < spellT.width / 1.5 then
                         --[[if spellT == R then
                                 count = count + 1
                         else]]
@@ -179,10 +179,10 @@ OnTick(function(myHero)
                         MoveToXYZ(GetMousePos())
                 end
                 
+                if Ori_CastE() == true then laste = GetTickCount() end
                 if Ori_CastQ() == true then lastq = GetTickCount() end
                 if Ori_CastSpell(_W, W) == true then lastw = GetTickCount() end
                 if Ori_CastSpell(_R, R) == true then lastr = GetTickCount() end
-                if Ori_CastE() == true then laste = GetTickCount() end
                 
         end
         
