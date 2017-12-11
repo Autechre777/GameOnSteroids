@@ -179,10 +179,10 @@ OnTick(function(myHero)
                         MoveToXYZ(GetMousePos())
                 end
                 
-                if Ori_CastE() == true then laste = GetTickCount() end
                 if Ori_CastQ() == true then lastq = GetTickCount() end
                 if Ori_CastSpell(_W, W) == true then lastw = GetTickCount() end
                 if Ori_CastSpell(_R, R) == true then lastr = GetTickCount() end
+                if Ori_CastE() == true then laste = GetTickCount() end
                 
         end
         
