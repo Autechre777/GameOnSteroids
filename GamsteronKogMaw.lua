@@ -25,7 +25,7 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.04")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.05")
     menu:KeyBinding("combo", "Combo", 32)
     menu:Slider("win", "Extra Wind Up Time",30,0,60,10)
     menu:Slider("manaR", "Max R Mana Cost",160,40,400,40)
