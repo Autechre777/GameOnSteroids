@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.07"
+local ver = "0.08"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronKogMaw.lua", SCRIPT_PATH .. "GamsteronKogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -26,21 +26,22 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.07")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.08")
         menu:Key("reset", "Reset Settings", string.byte("T"))
         menu:SubMenu("combo", "Combo")
                 menu.combo:Key("ckey", "Combo Key", 32)
+                menu.combo:Slider("ewin", "Higher Value = faster kite",60,-15,100,10)
                 menu.combo:Slider("manaR", "Max R Mana Cost - combo",80,40,400,40)
                 menu.combo:Slider("manaRk", "Max R Mana Cost - killsteal",200,40,400,40)
         menu:SubMenu("pred", "Prediction")
-                menu.pred:Slider("predQ", "Q Hitchance",65,0,100,1)
-                menu.pred:Slider("predE", "E Hitchance",65,0,100,1)
-                menu.pred:Slider("predR", "R Hitchance",65,0,100,1)
+                menu.pred:Slider("predQ", "Q Hitchance",88,0,100,1)
+                menu.pred:Slider("predE", "E Hitchance",88,0,100,1)
+                menu.pred:Slider("predR", "R Hitchance",88,0,100,1)
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
                 lastaa = GetTickCount()
-                aawind = aa.windUpTime * 1000 + 10
+                aawind = aa.windUpTime * 1000 - menu.combo.ewin:Value()
                 aaanim = aa.animationTime * 1000 - 125
         end
 end)
@@ -118,7 +119,7 @@ function Kog_CastSpell(spell, spellT, kill)
                         if ValidTarget(enemy, spellT.range) then
                                 if math.sqrt( (enemy.x-myHero.x)^2 + (enemy.z-myHero.z)^2) > aarange + myHero.boundingRadius + enemy.boundingRadius then
                                         local tmr = math.abs(math.floor(GetMagicPenPercent(myHero) * ( GetMagicResist(enemy) - GetMagicPenFlat(myHero) )))
-                                        spelldmg = spelldmg * ( tmr / ( tmr + 100 ) )
+                                        spelldmg = spelldmg * ( 1 - ( tmr / ( tmr + 100 ) ) )
                                         local thp = math.floor(enemy.health + GetMagicShield(enemy) - spelldmg)
                                         if thp < 0 then
                                                 tkill = enemy
@@ -151,9 +152,10 @@ OnTick(function(myHero)
         if menu.reset:Value() then
                 menu.combo.manaR:Value(80)
                 menu.combo.manaRk:Value(200)
-                menu.pred.predQ:Value(65)
-                menu.pred.predE:Value(65)
-                menu.pred.predR:Value(65)
+                menu.combo.ewin:Value(60)
+                menu.pred.predQ:Value(88)
+                menu.pred.predE:Value(88)
+                menu.pred.predR:Value(88)
         end
         
         if menu.combo.ckey:Value() then
