@@ -52,7 +52,7 @@ function Orb_GetTarget(range)
                 if ValidTarget(enemy, range) then
                         local mr = GetMagicResist(enemy)
                         local hp = enemy.health * (mr/(mr+100))
-                        if hp - ((GetBonusDmg(enemy)+GetBonusAP(enemy))*2) < num then
+                        if hp < num then
                                 num = hp
                                 t = enemy
                         end
