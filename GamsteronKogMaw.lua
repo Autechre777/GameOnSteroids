@@ -27,11 +27,11 @@ local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
 menu = MenuConfig("GSO", "GamSterOn KogMaw 0.04")
     menu:KeyBinding("combo", "Combo", 32)
-    menu:Slider("win", "Extra Wind Up Time",50,0,100,10)
+    menu:Slider("win", "Extra Wind Up Time",30,0,60,10)
     menu:Slider("manaR", "Max R Mana Cost",160,40,400,40)
-    menu:Slider("predQ", "Q Hitchance",25,0,100,1)
-    menu:Slider("predE", "E Hitchance",25,0,100,1)
-    menu:Slider("predR", "R Hitchance",25,0,100,1)
+    menu:Slider("predQ", "Q Hitchance",50,0,100,1)
+    menu:Slider("predE", "E Hitchance",50,0,100,1)
+    menu:Slider("predR", "R Hitchance",50,0,100,1)
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
@@ -81,9 +81,8 @@ function Kog_CastSpell(spell, spellT)
         elseif spellT == E and GetTickCount() < laste + 500 then return false
         elseif spellT == R then
                 if GetTickCount() < lastr + 500 then return false end
-                local mana = GetCurrentMana(myHero)
                 local kogartillery = 40 + ( 40 * GotBuff(myHero, "kogmawlivingartillerycost") )
-                if kogartillery > mana - 80 or kogartillery > menu.manaR:Value() then return false end
+                if kogartillery > GetCurrentMana(myHero) - 80 or kogartillery > menu.manaR:Value() then return false end
                 spellT.range = 900 + ( 300 * GetCastLevel(myHero, spell) )
         end
         
