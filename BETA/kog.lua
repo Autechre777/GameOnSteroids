@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.05"
+local ver = "0.06"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronKogMaw.lua", SCRIPT_PATH .. "GamsteronKogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -25,7 +25,7 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.05")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.06")
         menu:SubMenu("combo", "Combo")
                 menu.combo:KeyBinding("ckey", "Combo Key", 32)
                 menu.combo:Slider("ewin", "Extra Wind Up Time",30,0,60,10)
@@ -33,10 +33,6 @@ menu = MenuConfig("GSO", "GamSterOn KogMaw 0.05")
                 menu.pred:Slider("predQ", "Q Hitchance",65,0,100,1)
                 menu.pred:Slider("predE", "E Hitchance",65,0,100,1)
                 menu.pred:Slider("predR", "R Hitchance",65,0,100,1)
-        menu:SubMenu("mana", "Mana")
-                menu.mana:Slider("saveE", "Save Mana after E",80,0,120,40)
-                menu.mana:Slider("saveR", "Save Mana after R",80,0,200,40)
-                menu.mana:Slider("manaR", "Max R Mana Cost",160,40,400,40)
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
@@ -82,23 +78,24 @@ function Kog_CastSpell(spell, spellT)
 
         if not IsReady(spell) or GetTickCount() < lastaa + aawind + 50 then return false end
         
+        local manacost = 0
+        local mana = GetCurrentMana(myHero)
+        local cdliveW = GetTickCount() - lastw
         local cdW = math.floor(17*1000*(1+GetCDR(myHero)))
-        local manaW = GetMPRegen(myHero) * 0.001 * ( GetTickCount() - lastw )
-        
         if spellT == Q  then
                 if GetTickCount() < lastq + 500 or GetTickCount() < laste + 250 or GetTickCount() < lastr + 250 then return false end
-                --if GetCurrentMana(myHero) - 40 < menu.mana.saveQ:Value() then return false end
+                manacost = 40
         elseif spellT == E then
                 if GetTickCount() < laste + 500 or GetTickCount() < lastq + 250 or GetTickCount() < lastr + 250 then return false end
-                local minusE = GetCastLevel(myHero, spell) * 10 + 70
-                if math.floor(17*1000*(1+GetCDR(myHero)))-8000 >1 then return false end
-                if GetCurrentMana(myHero) - minusE < menu.mana.saveE:Value() then return false end
+                manacost = 70 + ( GetCastLevel(myHero, spell) * 10 )
         elseif spellT == R then
-                if GetTickCount() < lastr + 500 or GetTickCount() < lastq + 250 or GetTickCount() < laste + 250 then return false end
-                local kogartillery = 40 + ( 40 * GotBuff(myHero, "kogmawlivingartillerycost") )
-                if GetCurrentMana(myHero) - menu.mana.saveR:Value() < kogartillery or kogartillery > menu.mana.manaR:Value() then return false end
                 spellT.range = 900 + ( 300 * GetCastLevel(myHero, spell) )
+                manacost = 40 + ( 40 * GotBuff(myHero, "kogmawlivingartillerycost") )
+                if manacost > 120 or GetTickCount() < lastr + 500 or GetTickCount() < lastq + 250 or GetTickCount() < laste + 250 then return false end
         end
+        if cdliveW - cdW < 0 then
+                if GetCurrentMana(myHero) + ( 0.001 * ( cdW - cdliveW ) * GetMPRegen(myHero) ) < 40 + manacost then return false end
+        elseif mana < 40 + manacost then return false end
         
         local t = Spell_GetTarget(spellT.range)
         if t == nil then return false end
@@ -123,12 +120,9 @@ end
 OnTick(function(myHero)
 
         if menu.combo.ckey:Value() then
-                local cdW = math.floor(17*1000*(1+GetCDR(myHero)))
-                local cdliveW = GetTickCount() - lastw
-                PrintChat(0.001 * ( cdW - cdliveW ) * GetMPRegen(myHero) )
-                if (IsReady(_W) and GetTickCount() > lastw + 500) or ( cdliveW < cdW and GetCurrentMana(myHero) + ( 0.001 * ( cdW - cdliveW ) * GetMPRegen(myHero) ) < 40 ) then
-                        --PrintChat(GetCurrentMana(myHero) + ( 0.001 * ( cdW - cdliveW ) * GetMPRegen(myHero) ))
-                end
+                
+                BlockF7OrbWalk(true)
+                
                 aarange = myHero.range
                 if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
                 local t = Orb_GetTarget(aarange + myHero.boundingRadius)
@@ -152,6 +146,10 @@ OnTick(function(myHero)
                 if Kog_CastSpell(_E, E) == true then laste = GetTickCount() end
                 if Kog_CastSpell(_Q, Q) == true then lastq = GetTickCount() end
                 if Kog_CastSpell(_R, R) == true then lastr = GetTickCount() end
+                
+        else
+        
+                BlockF7OrbWalk(false)
                 
         end
         
