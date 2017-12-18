@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.08"
+local ver = "0.09"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronKogMaw.lua", SCRIPT_PATH .. "GamsteronKogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -19,9 +19,9 @@ local lastr = 0
 local lastaa = 0
 local aawind = 0
 local aaanim = 0
-local aarange = 0
 local lastmove = 0
 local lastkillsteal = 0
+local aarange = myHero.range + myHero.boundingRadius
 local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
@@ -34,42 +34,30 @@ menu = MenuConfig("GSO", "GamSterOn KogMaw 0.08")
                 menu.combo:Slider("manaR", "Max R Mana Cost - combo",80,40,400,40)
                 menu.combo:Slider("manaRk", "Max R Mana Cost - killsteal",200,40,400,40)
         menu:SubMenu("pred", "Prediction")
-                menu.pred:Slider("predQ", "Q Hitchance",88,0,100,1)
-                menu.pred:Slider("predE", "E Hitchance",88,0,100,1)
-                menu.pred:Slider("predR", "R Hitchance",88,0,100,1)
+                menu.pred:Slider("predQ", "Q Hitchance",50,0,100,1)
+                menu.pred:Slider("predE", "E Hitchance",50,0,100,1)
+                menu.pred:Slider("predR", "R Hitchance",50,0,100,1)
+
+local qHitchance =  menu.pred.predQ:Value() * 0.01
+local eHitchance =  menu.pred.predE:Value() * 0.01
+local rHitchance =  menu.pred.predR:Value() * 0.01
 
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
                 lastaa = GetTickCount()
-                aawind = aa.windUpTime * 1000 - menu.combo.ewin:Value()
-                aaanim = aa.animationTime * 1000 - 125
+                aawind = ( aa.windUpTime * 1000 ) - menu.combo.ewin:Value()
+                aaanim = ( aa.animationTime * 1000 ) - 125
         end
 end)
 
-function Orb_GetTarget(range)
+function Kog_GetTarget(range, addBB)
         local t = nil
-        num = 10000
+        local num = 0
         for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, range + enemy.boundingRadius) then
-                        local mr = GetMagicResist(enemy)
-                        local hp = enemy.health * (mr/(mr+100))
-                        if hp < num then
-                                num = hp
-                                t = enemy
-                        end
-                end
-        end
-        return t
-end
-
-function Spell_GetTarget(range)
-        local t = nil
-        num = 10000
-        for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, range) then
-                        local mr = GetMagicResist(enemy)
-                        local hp = enemy.health * (mr/(mr+100))
-                        if hp < num then
+                local r = addBB and range + enemy.boundingRadius or range
+                if ValidTarget(enemy, r) then
+                        local hp = enemy.health * (100/(100+GetMagicResist(enemy)))
+                        if hp > num then
                                 num = hp
                                 t = enemy
                         end
@@ -81,7 +69,7 @@ end
 function Kog_CastSpell(spell, spellT, kill)
 
         if not IsReady(spell) or GetTickCount() < lastaa + aawind then return false end
-        if kill == true and GetTickCount() < lastkillsteal + 1500 then return false end
+        if kill == true and GetTickCount() < lastkillsteal + 1000 then return false end
         
         local spelldmg = 0
         local manacost = 0
@@ -107,7 +95,7 @@ function Kog_CastSpell(spell, spellT, kill)
                 if GetCurrentMana(myHero) + ( 0.001 * ( cdW - cdliveW ) * GetMPRegen(myHero) ) < 40 + manacost then return false end
         elseif GetCurrentMana(myHero) < 40 + manacost then return false end
         
-        local t = Spell_GetTarget(spellT.range)
+        local t = Kog_GetTarget(spellT.range, false)
         if t == nil then return false end
         
         local inRange = math.sqrt( (t.x-myHero.x)^2 + (t.z-myHero.z)^2) < aarange + myHero.boundingRadius + t.boundingRadius
@@ -118,9 +106,10 @@ function Kog_CastSpell(spell, spellT, kill)
                 for i, enemy in pairs(GetEnemyHeroes()) do
                         if ValidTarget(enemy, spellT.range) then
                                 if math.sqrt( (enemy.x-myHero.x)^2 + (enemy.z-myHero.z)^2) > aarange + myHero.boundingRadius + enemy.boundingRadius then
-                                        local tmr = math.abs(math.floor(GetMagicPenPercent(myHero) * ( GetMagicResist(enemy) - GetMagicPenFlat(myHero) )))
-                                        spelldmg = spelldmg * ( 1 - ( tmr / ( tmr + 100 ) ) )
-                                        local thp = math.floor(enemy.health + GetMagicShield(enemy) - spelldmg)
+                                        local tmr = GetMagicResist(enemy) - GetMagicPenFlat(myHero)
+                                        tmr = tmr > 0 and GetMagicPenPercent(myHero) * tmr or tmr
+                                        spelldmg = tmr > 0 and spelldmg * ( 100 / ( 100 + tmr ) ) or spelldmg * ( 2 - ( 100 / ( 100 - tmr ) ) )
+                                        local thp = enemy.health + GetMagicShield(enemy) + (GetHPRegen(enemy)*2) - spelldmg
                                         if thp < 0 then
                                                 tkill = enemy
                                                 break
@@ -135,9 +124,9 @@ function Kog_CastSpell(spell, spellT, kill)
         
         local pI = GetPrediction(t, spellT)
         if pI then
-                if spell == _Q and pI.hitChance < menu.pred.predQ:Value() / 100 then return false end
-                if spell == _E and pI.hitChance < menu.pred.predE:Value() / 100 then return false end
-                if spell == _R and pI.hitChance < menu.pred.predR:Value() / 100 then return false end
+                if spell == _Q and pI.hitChance < qHitchance then return false end
+                if spell == _E and pI.hitChance < eHitchance then return false end
+                if spell == _R and pI.hitChance < rHitchance then return false end
                 if spell == _Q and pI:mCollision(1) then return false end
                 CastSkillShot(spell, pI.castPos)
                 if kill == true then lastkillsteal = GetTickCount() end
@@ -149,35 +138,37 @@ end
 
 OnTick(function(myHero)
 
+        qHitchance =  menu.pred.predQ:Value() * 0.01
+        eHitchance =  menu.pred.predE:Value() * 0.01
+        rHitchance =  menu.pred.predR:Value() * 0.01
+        local baarange = GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500)
+        aarange = baarange and myHero.boundingRadius + 610 + (20 * GetCastLevel(myHero, _W)) or myHero.range + myHero.boundingRadius
+        
         if menu.reset:Value() then
                 menu.combo.manaR:Value(80)
                 menu.combo.manaRk:Value(200)
-                menu.combo.ewin:Value(60)
-                menu.pred.predQ:Value(88)
-                menu.pred.predE:Value(88)
-                menu.pred.predR:Value(88)
+                menu.combo.ewin:Value(50)
+                menu.pred.predQ:Value(50)
+                menu.pred.predE:Value(50)
+                menu.pred.predR:Value(50)
         end
         
         if menu.combo.ckey:Value() then
-                
+        
                 BlockF7OrbWalk(true)
                 
-                aarange = myHero.range
-                local moveT = lastaa + aawind
-                local attackT = lastaa + aaanim
-                if GotBuff(myHero, "KogMawBioArcaneBarrage") == 1 or GetTickCount() < lastw + 500 or (IsReady(_W) and GetTickCount() > lastw + 500) then aarange = 610 + (20 * GetCastLevel(myHero, _W)) end
+                local checkT = GetTickCount()
+                local canMove = checkT > lastaa + aawind and checkT > lastmove + 125
+                local canAttack = checkT > lastaa + aaanim
                 
-                local t = Orb_GetTarget(aarange + myHero.boundingRadius)
-                if t == nil and GetTickCount() > moveT and GetTickCount() > lastmove + 175 then
-                        lastmove = GetTickCount()
-                        MoveToXYZ(GetMousePos())
-                elseif t ~= nil and GetTickCount() > attackT then
+                local t = Kog_GetTarget(aarange, true)
+                if t ~= nil and canAttack then
                         if IsReady(_W) and GetTickCount() > lastw + 500 then
                                 CastSpell(_W)
                                 lastw = GetTickCount()
                         end
                         AttackUnit(t)
-                elseif GetTickCount() > moveT and GetTickCount() > lastmove + 175 then
+                elseif canMove then
                         lastmove = GetTickCount()
                         MoveToXYZ(GetMousePos())
                 end
