@@ -59,7 +59,7 @@ function Kog_GetTarget(range, addBB)
                         local mr = GetMagicResist(enemy) - GetMagicPenFlat(myHero)
                               mr = mr > 0 and GetMagicPenPercent(myHero) * mr or mr
                         local hp  = GetCurrentHP(enemy) + ( 2 * mr ) - ( 1.5*(GetBaseDamage(enemy) + GetBonusDmg(enemy)) ) - ( 1.5 * GetBonusAP(enemy) )
-                        if hp > num then
+                        if hp < num then
                                 num = hp
                                 t = enemy
                         end
