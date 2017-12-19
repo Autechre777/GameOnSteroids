@@ -1,6 +1,6 @@
 if myHero.charName ~= "KogMaw" then return end
 
-local ver = "0.09"
+local ver = "0.10"
 function AutoUpdate(data)
     if tonumber(data) > tonumber(ver) then
         DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GameOnSteroids/master/GamsteronKogMaw.lua", SCRIPT_PATH .. "GamsteronKogMaw.lua", function() PrintChat("Update Complete, please 2x F6!") return end)
@@ -52,11 +52,13 @@ end)
 
 function Kog_GetTarget(range, addBB)
         local t = nil
-        local num = 0
+        local num = 10000000
         for i, enemy in pairs(GetEnemyHeroes()) do
                 local r = addBB and range + enemy.boundingRadius or range
                 if ValidTarget(enemy, r) then
-                        local hp = enemy.health * (100/(100+GetMagicResist(enemy)))
+                        local mr = GetMagicResist(enemy) - GetMagicPenFlat(myHero)
+                              mr = mr > 0 and GetMagicPenPercent(myHero) * mr or mr
+                        local hp  = GetCurrentHP(enemy) + ( 2 * mr ) - ( 1.5*(GetBaseDamage(enemy) + GetBonusDmg(enemy)) ) - ( 1.5 * GetBonusAP(enemy) )
                         if hp > num then
                                 num = hp
                                 t = enemy
