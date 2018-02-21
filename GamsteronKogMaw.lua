@@ -26,11 +26,12 @@ local Q = { range = 1175, speed = 1700, width = 70, delay = 0.25 }
 local E = { range = 1280, speed = 1350, width = 110, delay = 0.25 }
 local R = { range = 0, speed = math.huge, width = 220, delay = 0.8 }
 
-menu = MenuConfig("GSO", "GamSterOn KogMaw 0.08")
+menu = MenuConfig("GSO", "GamSterOn KogMaw 0.09")
         menu:Key("reset", "Reset Menu Settings", string.byte("T"))
         menu:SubMenu("combo", "Combo")
                 menu.combo:Key("ckey", "Combo Key", 32)
-                menu.combo:Slider("ewin", "Higher Value = faster kite",60,-15,100,10)
+                menu.combo:Slider("ewin", "Extra WindUp - higher value = slower kite",60,0,120,5)
+                menu.combo:Slider("eanim", "Extra Anim - higher value = less DPS",125,0,125,5)
                 menu.combo:Slider("manaR", "Max R Mana Cost - combo",80,40,400,40)
                 menu.combo:Slider("manaRk", "Max R Mana Cost - killsteal",200,40,400,40)
         menu:SubMenu("pred", "Prediction")
@@ -45,8 +46,8 @@ local rHitchance =  menu.pred.predR:Value() * 0.01
 OnProcessSpellAttack(function(unit, aa)
         if unit.isMe then
                 lastaa = GetTickCount()
-                aawind = ( aa.windUpTime * 1000 ) - menu.combo.ewin:Value()
-                aaanim = ( aa.animationTime * 1000 ) - 125
+                aawind = ( aa.windUpTime * 1000 ) - 60 + menu.combo.ewin:Value()
+                aaanim = ( aa.animationTime * 1000 ) - 125 + menu.combo.eanim:Value()
         end
 end)
 
